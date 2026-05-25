@@ -43,9 +43,10 @@ public class MessageEventConsumer {
             }
 
             log.info("Bot received event from sender={}", event.getSender());
+            String content = event.getContent();
 
             // simple bot logic
-            if (event.getContent().toLowerCase().contains("hello")) {
+            if (content != null && content.toLowerCase().contains("hello")) {
 
                 String reply = "Hi! Im a bot :D";
 
