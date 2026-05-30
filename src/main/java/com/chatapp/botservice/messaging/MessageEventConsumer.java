@@ -34,7 +34,6 @@ public class MessageEventConsumer {
     public void handleMessage(String eventJson) {
 
         try {
-            // Parse JSON → Java object
             MessageEventDTO event = objectMapper.readValue(eventJson, MessageEventDTO.class);
 
             // Stop loop
@@ -43,16 +42,97 @@ public class MessageEventConsumer {
             }
 
             log.info("Bot received event from sender={}", event.getSender());
+
             String content = event.getContent();
+            String message = content == null ? "" : content.trim().toLowerCase();
 
-            // simple bot logic
-            if (content != null && content.toLowerCase().contains("hello")) {
+            String reply = null;
 
-                String reply = "Hi! Im a bot :D";
+            if (message.equals("hello") || message.equals("hi")) {
+
+                reply = """
+                    Hello! How can I help you today?
+
+                    1. Delivery
+                    2. Contact Support
+                    3. Opening Hours
+                    4. Return Policy
+
+                    Please enter a number.
+                    """;
+            }
+            else if (message.equals("1")) {
+
+                reply = """
+                    Delivery normally takes 2-4 business days.
+
+                    Was this information helpful?
+
+                    Yes / No
+                    """;
+            }
+            else if (message.equals("2")) {
+
+                reply = """
+                    You can contact support at:
+
+                    support@chatapp.com
+
+                    Was this information helpful?
+
+                    Yes / No
+                    """;
+            }
+            else if (message.equals("3")) {
+
+                reply = """
+                    Our opening hours are:
+
+                    Monday-Friday
+                    08:00 - 17:00
+
+                    Was this information helpful?
+
+                    Yes / No
+                    """;
+            }
+            else if (message.equals("4")) {
+
+                reply = """
+                    Returns are accepted within 30 days.
+
+                    Was this information helpful?
+
+                    Yes / No
+                    """;
+            }
+            else if (message.equals("yes")) {
+
+                reply = """
+                    Great! I'm glad I could help.
+
+                    If you need anything else,
+                    type hello to start again.
+                    """;
+            }
+            else if (message.equals("no")) {
+
+                reply = """
+                    I'm sorry to hear that.
+
+                    Please contact support@chatapp.com
+                    for further assistance.
+
+                    Type hello to start again.
+                    """;
+            }
+
+            if (reply != null) {
 
                 log.info("Bot replying to sender={}", event.getSender());
 
-                MessageRequestDTO request = new MessageRequestDTO(reply, "bot");
+                MessageRequestDTO request =
+                        new MessageRequestDTO(reply, "bot");
 
                 webClient.post()
                         .uri("/messages")
@@ -61,7 +141,8 @@ public class MessageEventConsumer {
                         .onStatus(
                                 status -> status.isError(),
                                 response -> response.bodyToMono(String.class)
-                                        .doOnNext(body -> log.error("Error response from message-service: {}", body))
+                                        .doOnNext(body ->
+                                                log.error("Error response from message-service: {}", body))
                                         .then(Mono.error(new RuntimeException("Request failed")))
                         )
                         .toBodilessEntity()
